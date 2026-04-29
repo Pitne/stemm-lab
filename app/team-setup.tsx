@@ -1,5 +1,6 @@
 import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import {
+  deleteTeam,
   isDiscriminatorTaken,
   saveTeam,
   updateTeam,
@@ -96,6 +97,35 @@ export default function TeamSetupScreen() {
       return 'Discriminator must be 3–6 uppercase letters or digits.';
     }
     return null;
+  };
+
+  const handleDelete = () => {
+    if (!team?.id) return;
+
+    Alert.alert(
+      'Delete team?',
+      `This will permanently remove "${team.name}" and all of its activity results. This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setSubmitting(true);
+              await deleteTeam(team.id as number);
+              await refresh();
+              router.replace('/');
+            } catch (err: any) {
+              console.error('Team delete error:', err);
+              Alert.alert('Error', err?.message ?? 'Could not delete team.');
+            } finally {
+              setSubmitting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSubmit = async () => {
@@ -323,6 +353,24 @@ export default function TeamSetupScreen() {
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
         )}
+
+        {isEditMode && team?.id && (
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerLabel}>Danger zone</Text>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+              disabled={submitting}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.error} />
+              <Text style={styles.deleteButtonText}>Delete team</Text>
+            </TouchableOpacity>
+            <Text style={styles.dangerHelper}>
+              Removes the team and all of its activity results. This cannot be
+              undone.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -496,4 +544,40 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     fontSize: FontSizes.medium,
   },
+  dangerZone: {
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  dangerLabel: {
+    color: Colors.error,
+    fontSize: FontSizes.small,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: Spacing.sm,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    borderRadius: 12,
+    padding: Spacing.md,
+  },
+  deleteButtonText: {
+    color: Colors.error,
+    fontSize: FontSizes.medium,
+    fontWeight: '600',
+  },
+  dangerHelper: {
+    marginTop: Spacing.xs,
+    color: Colors.textLight,
+    fontSize: FontSizes.small,
+  },
 });
+

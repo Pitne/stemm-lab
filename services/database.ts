@@ -149,6 +149,11 @@ export async function updateTeam(
   );
 }
 
+
+export async function deleteTeam(id: number): Promise<void> {
+  await getDb().runAsync('DELETE FROM teams WHERE id = ?', [id]);
+}
+
 export async function isDiscriminatorTaken(
   discriminator: string
 ): Promise<boolean> {

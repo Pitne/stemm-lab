@@ -1,13 +1,9 @@
 import { Colors, FontSizes, Spacing } from '@/constants/theme';
-import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
-import { auth } from '@/services/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { signOut } from 'firebase/auth';
 import { useCallback } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,8 +11,39 @@ import {
   View,
 } from 'react-native';
 
+type QuickStartActivity = {
+  id: string;
+  emoji: string;
+  name: string;
+  description: string;
+  route: string;
+};
+
+const QUICK_START_ACTIVITIES: QuickStartActivity[] = [
+  {
+    id: 'earthquake',
+    emoji: '🌍',
+    name: 'Earthquake',
+    description: 'Measure shaking with the gyroscope',
+    route: '/activities/earthquake',
+  },
+  {
+    id: 'reaction',
+    emoji: '⚡',
+    name: 'Reaction Game',
+    description: 'Test how fast you can tap',
+    route: '/activities/reaction',
+  },
+  {
+    id: 'breathing',
+    emoji: '🫁',
+    name: 'Breathing',
+    description: 'Track chest movement & breaths',
+    route: '/activities/breathing',
+  },
+];
+
 export default function HomeScreen() {
-  const { user } = useAuth();
   const { team, refresh } = useTeam();
 
   useFocusEffect(
@@ -25,33 +52,19 @@ export default function HomeScreen() {
     }, [refresh])
   );
 
-  const handleSignOut = async () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut(auth);
-            router.replace('/auth/login');
-          } catch (error: any) {
-            Alert.alert('Error', error.message);
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleEditTeam = () => {
-    router.push('/team-setup?edit=1');
-  };
+  const completedCount = 0;
+  const totalCount = 7;
+  const bestScore = '—';
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.emoji}>🔬</Text>
-      <Text style={styles.title}>Welcome to STEMM Lab</Text>
-      <Text style={styles.subtitle}>Select an activity to get started</Text>
+      <View style={styles.welcome}>
+        <Text style={styles.emoji}>🔬</Text>
+        <Text style={styles.title}>Welcome to STEMM Lab</Text>
+        <Text style={styles.subtitle}>
+          Explore science through your phone&apos;s sensors
+        </Text>
+      </View>
 
       {team ? (
         <View style={styles.teamCard}>
@@ -64,7 +77,6 @@ export default function HomeScreen() {
               <Text style={styles.discPillText}>#{team.discriminator}</Text>
             </View>
           </View>
-
           <View style={styles.teamMetaRow}>
             <View style={styles.teamMetaItem}>
               <Ionicons
@@ -81,11 +93,11 @@ export default function HomeScreen() {
                 color={Colors.textLight}
               />
               <Text style={styles.teamMetaText}>
-                {team.members.length} member{team.members.length === 1 ? '' : 's'}
+                {team.members.length} member
+                {team.members.length === 1 ? '' : 's'}
               </Text>
             </View>
           </View>
-
           {team.members.length > 0 && (
             <View style={styles.memberList}>
               {team.members.map((m, idx) => (
@@ -95,32 +107,81 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
-
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEditTeam}
-          >
-            <Ionicons name="create-outline" size={18} color={Colors.text} />
-            <Text style={styles.editButtonText}>Edit team</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity
           style={styles.setupCta}
           onPress={() => router.push('/team-setup')}
         >
+          <Ionicons name="add-circle-outline" size={20} color={Colors.text} />
           <Text style={styles.setupCtaText}>Set up your team</Text>
         </TouchableOpacity>
       )}
 
-      <View style={styles.userCard}>
-        <Text style={styles.userLabel}>Signed in as</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Achievements</Text>
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Ionicons
+              name="checkmark-done-outline"
+              size={20}
+              color={Colors.secondary}
+            />
+            <View style={styles.statTextWrap}>
+              <Text style={styles.statLabel}>Activities completed</Text>
+              <Text style={styles.statValue}>
+                {completedCount} / {totalCount}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Ionicons
+              name="star-outline"
+              size={20}
+              color={Colors.warning}
+            />
+            <View style={styles.statTextWrap}>
+              <Text style={styles.statLabel}>Best score</Text>
+              <Text style={styles.statValue}>{bestScore}</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+      <View style={styles.section}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Quick Start</Text>
+          <TouchableOpacity onPress={() => router.push('/activities' as any)}>
+            <Text style={styles.sectionLink}>View all</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.quickList}>
+          {QUICK_START_ACTIVITIES.map((act) => (
+            <TouchableOpacity
+              key={act.id}
+              style={styles.quickCard}
+              onPress={() => router.push(act.route as any)}
+            >
+              <Text style={styles.quickEmoji}>{act.emoji}</Text>
+              <View style={styles.quickTextWrap}>
+                <Text style={styles.quickName}>{act.name}</Text>
+                <Text style={styles.quickDesc}>{act.description}</Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={Colors.textLight}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.adBanner}>
+        <Ionicons name="megaphone-outline" size={18} color={Colors.textLight} />
+        <Text style={styles.adText}>Ad banner — coming soon</Text>
+      </View>
     </ScrollView>
   );
 }
@@ -128,27 +189,28 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: Colors.background,
-    padding: Spacing.xl,
+    padding: Spacing.lg,
+  },
+  welcome: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
   emoji: {
-    fontSize: 60,
-    marginBottom: Spacing.sm,
+    fontSize: 56,
+    marginBottom: Spacing.xs,
   },
   title: {
     fontSize: FontSizes.xlarge,
     fontWeight: 'bold',
     color: Colors.text,
-    marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: FontSizes.medium,
     color: Colors.textLight,
-    marginBottom: Spacing.xl,
     textAlign: 'center',
+    marginTop: 4,
   },
   teamCard: {
     backgroundColor: Colors.surface,
@@ -156,8 +218,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: 16,
     padding: Spacing.md,
-    width: '100%',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   teamHeader: {
     flexDirection: 'row',
@@ -204,7 +265,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
-    marginBottom: Spacing.md,
   },
   memberPill: {
     backgroundColor: Colors.surfaceAlt,
@@ -215,66 +275,120 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
   },
-  editButton: {
+  setupCta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    padding: Spacing.sm,
-  },
-  editButtonText: {
-    color: Colors.text,
-    fontSize: FontSizes.medium,
-    fontWeight: '600',
-  },
-  setupCta: {
     backgroundColor: Colors.primary,
     borderRadius: 12,
     padding: Spacing.md,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   setupCtaText: {
     color: Colors.text,
     fontSize: FontSizes.medium,
     fontWeight: 'bold',
   },
-  userCard: {
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: FontSizes.large,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  sectionLink: {
+    fontSize: FontSizes.small,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  statsCard: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 12,
     padding: Spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    marginBottom: Spacing.md,
   },
-  userLabel: {
+  statItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  statTextWrap: {
+    flex: 1,
+  },
+  statLabel: {
     fontSize: FontSizes.small,
     color: Colors.textLight,
-    marginBottom: Spacing.xs,
   },
-  userEmail: {
+  statValue: {
     fontSize: FontSizes.medium,
     color: Colors.text,
     fontWeight: 'bold',
+    marginTop: 2,
   },
-  signOutButton: {
-    backgroundColor: Colors.error,
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.border,
+    marginHorizontal: Spacing.sm,
+  },
+  quickList: {
+    gap: Spacing.sm,
+  },
+  quickCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 12,
     padding: Spacing.md,
-    alignItems: 'center',
-    width: '100%',
-    marginTop: Spacing.sm,
   },
-  signOutText: {
-    color: Colors.text,
+  quickEmoji: {
+    fontSize: 28,
+  },
+  quickTextWrap: {
+    flex: 1,
+  },
+  quickName: {
     fontSize: FontSizes.medium,
     fontWeight: 'bold',
+    color: Colors.text,
+  },
+  quickDesc: {
+    fontSize: FontSizes.small,
+    color: Colors.textLight,
+    marginTop: 2,
+  },
+  adBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.surface,
+  },
+  adText: {
+    color: Colors.textLight,
+    fontSize: FontSizes.small,
+    fontStyle: 'italic',
   },
 });

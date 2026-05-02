@@ -1,11 +1,12 @@
 import { Colors, FontSizes, Spacing } from '@/constants/theme';
+import { useTeam } from '@/hooks/useTeam';
 import {
   deleteTeam,
   isDiscriminatorTaken,
   saveTeam,
   updateTeam,
 } from '@/services/database';
-import { useTeam } from '@/hooks/useTeam';
+import { containsProfanity } from '@/utils/profanityFilter';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -65,6 +66,13 @@ export default function TeamSetupScreen() {
     [members]
   );
 
+  // ── Profanity checks (real-time, runs on every render) ──────────────────
+  const nameHasProfanity = name.length > 0 && containsProfanity(name);
+  const memberProfanityFlags = members.map(
+    (m) => m.length > 0 && containsProfanity(m)
+  );
+  const anyProfanity = nameHasProfanity || memberProfanityFlags.some(Boolean);
+
   const handleAddMember = () => {
     if (members.length >= MAX_MEMBERS) {
       Alert.alert('Limit reached', `A team can have at most ${MAX_MEMBERS} members.`);
@@ -91,6 +99,9 @@ export default function TeamSetupScreen() {
   const validate = (): string | null => {
     if (!name.trim()) return 'Team name is required.';
     if (name.trim().length < 2) return 'Team name must be at least 2 characters.';
+    if (containsProfanity(name)) return 'Team name contains inappropriate language.';
+    const profaneMember = members.find((m) => m.trim().length > 0 && containsProfanity(m));
+    if (profaneMember) return `Member name "${profaneMember.trim()}" contains inappropriate language.`;
     if (trimmedMembers.length === 0) return 'Add at least one member.';
     if (grade === null) return 'Please select a grade.';
     if (!/^[A-Z0-9]{3,6}$/.test(discriminator)) {
@@ -209,13 +220,18 @@ export default function TeamSetupScreen() {
         <View style={styles.field}>
           <Text style={styles.label}>Team name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, nameHasProfanity && styles.inputError]}
             placeholder="e.g. The Curious Coders"
             placeholderTextColor={Colors.textLight}
             value={name}
             onChangeText={setName}
             maxLength={40}
           />
+          {nameHasProfanity && (
+            <Text style={styles.errorText}>
+              ⚠️ Team name contains inappropriate language
+            </Text>
+          )}
         </View>
 
         {/* Members */}
@@ -230,7 +246,7 @@ export default function TeamSetupScreen() {
           {members.map((member, index) => (
             <View key={index} style={styles.memberRow}>
               <TextInput
-                style={[styles.input, styles.memberInput]}
+                style={[styles.input, styles.memberInput, memberProfanityFlags[index] && styles.inputError]}
                 placeholder={`Member ${index + 1} name`}
                 placeholderTextColor={Colors.textLight}
                 value={member}
@@ -250,6 +266,13 @@ export default function TeamSetupScreen() {
               </TouchableOpacity>
             </View>
           ))}
+          {memberProfanityFlags.map((flag, i) =>
+            flag ? (
+              <Text key={i} style={styles.errorText}>
+                ⚠️ Member {i + 1} name contains inappropriate language
+              </Text>
+            ) : null
+          )}
 
           <TouchableOpacity
             style={styles.addMemberButton}
@@ -331,9 +354,9 @@ export default function TeamSetupScreen() {
 
         {/* Submit */}
         <TouchableOpacity
-          style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+          style={[styles.submitButton, (submitting || anyProfanity) && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={submitting}
+          disabled={submitting || anyProfanity}
         >
           {submitting ? (
             <ActivityIndicator color={Colors.text} />
@@ -438,6 +461,15 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     fontSize: FontSizes.medium,
     color: Colors.text,
+  },
+  inputError: {
+    borderColor: Colors.error,
+    backgroundColor: '#2A1010',
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: FontSizes.small,
+    marginTop: Spacing.xs,
   },
   memberRow: {
     flexDirection: 'row',

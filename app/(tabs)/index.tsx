@@ -21,6 +21,13 @@ type QuickStartActivity = {
 
 const QUICK_START_ACTIVITIES: QuickStartActivity[] = [
   {
+    id: 'parachute',
+    emoji: '🪂',
+    name: 'Parachute Drop',
+    description: 'Test drag force and landing speed',
+    route: '/activities/parachute',
+  },
+  {
     id: 'earthquake',
     emoji: '🌍',
     name: 'Earthquake',
@@ -33,13 +40,6 @@ const QUICK_START_ACTIVITIES: QuickStartActivity[] = [
     name: 'Reaction Game',
     description: 'Test how fast you can tap',
     route: '/activities/reaction',
-  },
-  {
-    id: 'breathing',
-    emoji: '🫁',
-    name: 'Breathing',
-    description: 'Track chest movement & breaths',
-    route: '/activities/breathing',
   },
 ];
 
@@ -79,31 +79,20 @@ export default function HomeScreen() {
           </View>
           <View style={styles.teamMetaRow}>
             <View style={styles.teamMetaItem}>
-              <Ionicons
-                name="school-outline"
-                size={16}
-                color={Colors.textLight}
-              />
+              <Ionicons name="school-outline" size={16} color={Colors.textLight} />
               <Text style={styles.teamMetaText}>Grade {team.grade}</Text>
             </View>
             <View style={styles.teamMetaItem}>
-              <Ionicons
-                name="people-outline"
-                size={16}
-                color={Colors.textLight}
-              />
+              <Ionicons name="people-outline" size={16} color={Colors.textLight} />
               <Text style={styles.teamMetaText}>
-                {team.members.length} member
-                {team.members.length === 1 ? '' : 's'}
+                {team.members.length} member{team.members.length === 1 ? '' : 's'}
               </Text>
             </View>
           </View>
           {team.members.length > 0 && (
             <View style={styles.memberList}>
               {team.members.map((m, idx) => (
-                <Text key={idx} style={styles.memberPill}>
-                  {m}
-                </Text>
+                <Text key={idx} style={styles.memberPill}>{m}</Text>
               ))}
             </View>
           )}
@@ -111,36 +100,27 @@ export default function HomeScreen() {
       ) : (
         <TouchableOpacity
           style={styles.setupCta}
-          onPress={() => router.push('/team-setup')}
+          onPress={() => router.push('/team-setup' as any)}
         >
           <Ionicons name="add-circle-outline" size={20} color={Colors.text} />
           <Text style={styles.setupCtaText}>Set up your team</Text>
         </TouchableOpacity>
       )}
 
+      {/* Achievements */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Achievements</Text>
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Ionicons
-              name="checkmark-done-outline"
-              size={20}
-              color={Colors.secondary}
-            />
+            <Ionicons name="checkmark-done-outline" size={20} color={Colors.secondary} />
             <View style={styles.statTextWrap}>
               <Text style={styles.statLabel}>Activities completed</Text>
-              <Text style={styles.statValue}>
-                {completedCount} / {totalCount}
-              </Text>
+              <Text style={styles.statValue}>{completedCount} / {totalCount}</Text>
             </View>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Ionicons
-              name="star-outline"
-              size={20}
-              color={Colors.warning}
-            />
+            <Ionicons name="star-outline" size={20} color={Colors.warning} />
             <View style={styles.statTextWrap}>
               <Text style={styles.statLabel}>Best score</Text>
               <Text style={styles.statValue}>{bestScore}</Text>
@@ -149,10 +129,11 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* Quick Start */}
       <View style={styles.section}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Quick Start</Text>
-          <TouchableOpacity onPress={() => router.push('/activities' as any)}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/activities' as any)}>
             <Text style={styles.sectionLink}>View all</Text>
           </TouchableOpacity>
         </View>
@@ -168,16 +149,13 @@ export default function HomeScreen() {
                 <Text style={styles.quickName}>{act.name}</Text>
                 <Text style={styles.quickDesc}>{act.description}</Text>
               </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={Colors.textLight}
-              />
+              <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
+      {/* Ad Banner Placeholder */}
       <View style={styles.adBanner}>
         <Ionicons name="megaphone-outline" size={18} color={Colors.textLight} />
         <Text style={styles.adText}>Ad banner — coming soon</Text>
@@ -325,9 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  statTextWrap: {
-    flex: 1,
-  },
+  statTextWrap: { flex: 1 },
   statLabel: {
     fontSize: FontSizes.small,
     color: Colors.textLight,
@@ -344,9 +320,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     marginHorizontal: Spacing.sm,
   },
-  quickList: {
-    gap: Spacing.sm,
-  },
+  quickList: { gap: Spacing.sm },
   quickCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -357,12 +331,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.md,
   },
-  quickEmoji: {
-    fontSize: 28,
-  },
-  quickTextWrap: {
-    flex: 1,
-  },
+  quickEmoji: { fontSize: 28 },
+  quickTextWrap: { flex: 1 },
   quickName: {
     fontSize: FontSizes.medium,
     fontWeight: 'bold',

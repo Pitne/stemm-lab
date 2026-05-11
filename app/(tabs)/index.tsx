@@ -28,11 +28,11 @@ const QUICK_START_ACTIVITIES: QuickStartActivity[] = [
     route: '/activities/parachute',
   },
   {
-    id: 'earthquake',
-    emoji: '🌍',
-    name: 'Earthquake',
-    description: 'Measure shaking with the gyroscope',
-    route: '/activities/earthquake',
+    id: 'sound',
+  emoji: '🔊',
+  name: 'Sound Hunter',
+  description: 'Map noise levels in your classroom',
+  route: '/activities/sound',
   },
   {
     id: 'reaction',

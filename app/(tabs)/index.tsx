@@ -35,11 +35,11 @@ const QUICK_START_ACTIVITIES: QuickStartActivity[] = [
   route: '/activities/sound',
   },
   {
-    id: 'reaction',
-    emoji: '⚡',
-    name: 'Reaction Game',
-    description: 'Test how fast you can tap',
-    route: '/activities/reaction',
+    id: 'handfan',
+    emoji: '🌬️',
+    name: 'Hand Fan',
+    description: 'Measure paper bend angle with accelerometer',
+    route: '/activities/handfan',
   },
 ];
 

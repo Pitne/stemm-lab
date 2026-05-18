@@ -2,21 +2,22 @@ import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
 import { db } from '@/services/firebase';
+import { scheduleChallengeNotification, sendResultsSavedNotification } from '@/services/notificationService';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Accelerometer } from 'expo-sensors';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -147,6 +148,10 @@ const handleSave = async () => {
     });
 
     Alert.alert('✅ Saved!', 'Your results have been saved successfully.', [{ text: 'OK' }]);
+    await sendResultsSavedNotification(
+      'Hand Fan Challenge',
+      team?.name ?? 'Your team'
+    );
   } catch (error: any) {
     Alert.alert('Error', 'Failed to save results. Please try again.');
     console.error(error);
@@ -185,6 +190,27 @@ const handleSave = async () => {
             Test how air movement affects flexible materials
           </Text>
         </View>
+        
+        {/* Challenge Timer */}
+<TouchableOpacity
+  style={styles.challengeTimer}
+  onPress={async () => {
+    const id = await scheduleChallengeNotification(
+      'Hand Fan Challenge',
+      20
+    );
+    if (id) {
+      Alert.alert(
+        '⏰ Challenge Started!',
+        'You will be notified in 20 minutes when your challenge time is up!',
+        [{ text: 'OK' }]
+      );
+    }
+  }}
+>
+  <Ionicons name="timer-outline" size={20} color={Colors.text} />
+  <Text style={styles.challengeTimerText}>Start 20 min Challenge</Text>
+</TouchableOpacity>
 
         {/* Instructions */}
         <View style={styles.infoCard}>
@@ -795,5 +821,22 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: FontSizes.medium,
     fontWeight: 'bold',
+  },
+  challengeTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  challengeTimerText: {
+    color: Colors.text,
+    fontSize: FontSizes.small,
+    fontWeight: '600',
   },
 });

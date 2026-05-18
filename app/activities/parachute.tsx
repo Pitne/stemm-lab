@@ -2,21 +2,22 @@ import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
 import { db } from '@/services/firebase';
+import { scheduleChallengeNotification, sendResultsSavedNotification } from '@/services/notificationService';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -176,6 +177,10 @@ const handleSave = async () => {
       'Your results have been saved to the leaderboard.',
       [{ text: 'OK' }]
     );
+    await sendResultsSavedNotification(
+      'Parachute Drop Challenge',
+      team?.name ?? 'Your team'
+    );
   } catch (error: any) {
     Alert.alert('Error', 'Failed to save results. Please try again.');
     console.error(error);
@@ -213,6 +218,27 @@ const handleSave = async () => {
           Design and test a parachute to slow a toy's fall
         </Text>
       </View>
+
+      {/* Challenge Timer */}
+<TouchableOpacity
+  style={styles.challengeTimer}
+  onPress={async () => {
+    const id = await scheduleChallengeNotification(
+      'Parachute Drop Challenge',
+      20
+    );
+    if (id) {
+      Alert.alert(
+        '⏰ Challenge Started!',
+        'You will be notified in 20 minutes when your challenge time is up!',
+        [{ text: 'OK' }]
+      );
+    }
+  }}
+>
+  <Ionicons name="timer-outline" size={20} color={Colors.text} />
+  <Text style={styles.challengeTimerText}>Start 20 min Challenge</Text>
+</TouchableOpacity>
 
         {/* Grade Selector */}
         <View style={styles.section}>
@@ -848,5 +874,22 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: FontSizes.medium,
     fontWeight: 'bold',
+  },
+  challengeTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  challengeTimerText: {
+    color: Colors.text,
+    fontSize: FontSizes.small,
+    fontWeight: '600',
   },
 });

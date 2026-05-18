@@ -1,38 +1,66 @@
 import { Colors } from '@/constants/theme';
 import { initDB } from '@/services/database';
 import app from '@/services/firebase';
+import { requestNotificationPermission } from '@/services/notificationService';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function RootLayout() {
-  const [ready, setReady] = useState(false);
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    const init = async () => {
       try {
-        await initDB();
-        console.log('SQLite initialised');
         console.log('Firebase initialised:', app.name);
+
+        // Wait for database to fully initialise first
+        await initDB();
+        console.log('Database initialised');
+
+        // Then request notification permission
+        await requestNotificationPermission();
+
+        // Listen for incoming notifications
+        notificationListener.current = Notifications.addNotificationReceivedListener(
+          (notification) => {
+            console.log('Notification received:', notification);
+          }
+        );
+
+        // Listen for when user taps a notification
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(
+          (response) => {
+            console.log('Notification tapped:', response);
+          }
+        );
+
+        // Only render screens after DB is ready
+        setDbReady(true);
+
       } catch (err) {
-        console.error('App init error:', err);
-      } finally {
-        setReady(true);
+        console.error('Init error:', err);
+        // Still render even if something fails
+        setDbReady(true);
       }
-    })();
+    };
+
+    init();
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
   }, []);
 
-  if (!ready) {
+  // Show loading spinner until DB is ready
+  if (!dbReady) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Colors.background,
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
@@ -43,7 +71,6 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="team-setup" />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>

@@ -2,6 +2,7 @@ import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
 import { db } from '@/services/firebase';
+import { scheduleChallengeNotification, sendResultsSavedNotification } from '@/services/notificationService';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Accelerometer } from 'expo-sensors';
@@ -192,6 +193,9 @@ export default function EarthquakeScreen() {
         'No Data',
         'Please complete at least one design test before saving.'
       );
+      Alert.alert('✅ Saved!', 'Your results have been saved successfully.', [
+        { text: 'OK' },
+      ]);
       return;
     }
 
@@ -220,7 +224,11 @@ export default function EarthquakeScreen() {
         createdAt: serverTimestamp(),
       });
 
-      Alert.alert('Saved', 'Your results have been saved successfully.', [
+      await sendResultsSavedNotification(
+        'Earthquake-Resistant Structure',
+        team?.name ?? 'Your team'
+      );
+      Alert.alert('✅ Saved!', 'Your results have been saved successfully.', [
         { text: 'OK' },
       ]);
     } catch (error) {
@@ -273,6 +281,27 @@ export default function EarthquakeScreen() {
             Design a structure that withstands vibration
           </Text>
         </View>
+
+        {/* Challenge Timer */}
+<TouchableOpacity
+  style={styles.challengeTimer}
+  onPress={async () => {
+    const id = await scheduleChallengeNotification(
+      'Earthquake-Resistant Structure',
+      20
+    );
+    if (id) {
+      Alert.alert(
+        '⏰ Challenge Started!',
+        'You will be notified in 20 minutes when your challenge time is up!',
+        [{ text: 'OK' }]
+      );
+    }
+  }}
+>
+  <Ionicons name="timer-outline" size={20} color={Colors.text} />
+  <Text style={styles.challengeTimerText}>Start 20 min Challenge</Text>
+</TouchableOpacity>
 
         {/* Instructions */}
         <View style={styles.infoCard}>
@@ -833,5 +862,22 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: FontSizes.medium,
     fontWeight: 'bold',
+  },
+  challengeTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  challengeTimerText: {
+    color: Colors.text,
+    fontSize: FontSizes.small,
+    fontWeight: '600',
   },
 });

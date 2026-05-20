@@ -1,11 +1,12 @@
 import { Colors, FontSizes, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
+import { getBackgroundSyncStatus } from '@/services/backgroundTaskService';
 import { auth } from '@/services/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -18,12 +19,17 @@ import {
 export default function ProfileScreen() {
   const { user } = useAuth();
   const { team, refresh } = useTeam();
+  const [syncStatus, setSyncStatus] = useState<string>('Checking...');
 
   useFocusEffect(
     useCallback(() => {
       refresh();
     }, [refresh])
   );
+
+  useEffect(() => {
+    getBackgroundSyncStatus().then(setSyncStatus);
+  }, []);
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -70,19 +76,11 @@ export default function ProfileScreen() {
 
           <View style={styles.teamMetaRow}>
             <View style={styles.teamMetaItem}>
-              <Ionicons
-                name="school-outline"
-                size={16}
-                color={Colors.textLight}
-              />
+              <Ionicons name="school-outline" size={16} color={Colors.textLight} />
               <Text style={styles.teamMetaText}>Grade {team.grade}</Text>
             </View>
             <View style={styles.teamMetaItem}>
-              <Ionicons
-                name="people-outline"
-                size={16}
-                color={Colors.textLight}
-              />
+              <Ionicons name="people-outline" size={16} color={Colors.textLight} />
               <Text style={styles.teamMetaText}>
                 {team.members.length} member{team.members.length === 1 ? '' : 's'}
               </Text>
@@ -92,9 +90,7 @@ export default function ProfileScreen() {
           {team.members.length > 0 && (
             <View style={styles.memberList}>
               {team.members.map((m, idx) => (
-                <Text key={idx} style={styles.memberPill}>
-                  {m}
-                </Text>
+                <Text key={idx} style={styles.memberPill}>{m}</Text>
               ))}
             </View>
           )}
@@ -117,6 +113,18 @@ export default function ProfileScreen() {
       <View style={styles.userCard}>
         <Text style={styles.userLabel}>Signed in as</Text>
         <Text style={styles.userEmail}>{user?.email ?? '—'}</Text>
+      </View>
+
+      {/* Background Sync Status */}
+      <View style={styles.syncCard}>
+        <View style={styles.syncRow}>
+          <Ionicons name="sync-outline" size={20} color={Colors.secondary} />
+          <Text style={styles.syncTitle}>Background Sync</Text>
+        </View>
+        <Text style={styles.syncStatus}>Status: {syncStatus}</Text>
+        <Text style={styles.syncDesc}>
+          App automatically syncs leaderboard data in the background every 15 minutes
+        </Text>
       </View>
 
       <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -267,6 +275,35 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.medium,
     color: Colors.text,
     fontWeight: 'bold',
+  },
+  syncCard: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: Spacing.md,
+    width: '100%',
+    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+  },
+  syncRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  syncTitle: {
+    fontSize: FontSizes.medium,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  syncStatus: {
+    fontSize: FontSizes.small,
+    color: Colors.secondary,
+    fontWeight: '600',
+  },
+  syncDesc: {
+    fontSize: FontSizes.small,
+    color: Colors.textLight,
   },
   signOutButton: {
     flexDirection: 'row',

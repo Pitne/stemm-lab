@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/theme';
+import { registerBackgroundSync } from '@/services/backgroundTaskService';
 import { initDB } from '@/services/database';
 import app from '@/services/firebase';
 import { requestNotificationPermission } from '@/services/notificationService';
@@ -24,6 +25,14 @@ export default function RootLayout() {
 
         // Then request notification permission
         await requestNotificationPermission();
+
+        // Register background sync task
+try {
+  await registerBackgroundSync();
+  console.log('Background sync registered');
+} catch (err) {
+  console.log('Background sync not available in Expo Go — will work in production build');
+}
 
         // Listen for incoming notifications
         notificationListener.current = Notifications.addNotificationReceivedListener(
